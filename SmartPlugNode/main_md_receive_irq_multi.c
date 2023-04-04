@@ -18,7 +18,7 @@ char  Rx2_packet[NRF_MAX_PAYLOAD_SIZE+1];
 char R;
 volatile int flag = 0;
 
-uint8_t  pipe[5] = {0x47, 0x52, 0x44, 0x32, 0x33}; // GRD23
+uint8_t pipe2[5] = {0x47, 0x52, 0x44, 0x32, 0x32}; // GRD22 
 
 ISR(PORTF_INT0_vect)
 {
@@ -58,7 +58,7 @@ void Init_Nrf(void)
 	PORT_INT0LVL_LO_gc ;
 
 	PORTF.OUTSET = PIN0_bm;
-	nrfOpenReadingPipe(0,pipe);
+	nrfOpenReadingPipe(0,pipe2);
 	nrfStartListening();
 
 }
