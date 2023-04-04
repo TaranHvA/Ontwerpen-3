@@ -12,9 +12,16 @@
 #include "nrf24spiXM2.h"
 #include "nrf24L01.h"
 
-#define MAX_VALUE   2047 // MAX ADC Value ATXMEGA256A3U
-#define VCC         3.30 // XMEGA256A3U VCC PIN Voltage
-#define VREF        (((double) VCC) / 1.6) // This Is The Calculation To Make The ADC Value A Voltage.
+#define MAX_VALUE   2047					// MAX ADC Value ATXMEGA256A3U
+#define VCC         3.30					// XMEGA256A3U VCC PIN Voltage
+#define VREF        (((double) VCC) / 1.6)	// This Is The Calculation To Make The ADC Value A Voltage.
+#define Out_per   	(100/2.061)				// 100% / Max voltage value remote light sensor
+#define Ins_per     (100/0.240)				// 100% / Max voltage value light sensor by full use LED light
+#define VREF        (((double) VCC) / 1.6)	// This Is The Calculation To Make The ADC Value A Voltage.
+
+
+
+
 
 char  Rx_packet[NRF_MAX_PAYLOAD_SIZE+1];
 
@@ -71,9 +78,8 @@ ISR(TCE0_OVF_vect)
 		nrfStartListening();								 // Starts To Listen To The NRF Read And Write Channels
 	}
 	
-	if ( (Sen_Int != 0) && (Sen_Int != 12) ){
+	if ( (Sen_Int != 0) && (Sen_Int != 24) ){
 		++Sen_Int;
-		printf("Counting till Sensor Time==12\n");
 	}
 	
 	if (Sen_Int >= 12){
@@ -169,10 +175,11 @@ void init_nrf(void)
 int main(void)
 {
 	double  Rx_Value;
-	uint8_t Light_LVL;
-	uint8_t  Out_LVL;
-	uint8_t  Ins_LVL;
-	uint8_t Ins_Per;
+	uint16_t Light_LVL;
+	uint8_t Out_LVL;
+	uint8_t Ins_LVL;
+	uint8_t Tot_Per;
+	uint8_t Light_Per;
 	
 	PORTD.DIRSET   = PIN2_bm;			   // input pin ADC
 	PORTD.DIRCLR   = PIN3_bm;              // input pin PIR Motion Sensor
@@ -214,43 +221,42 @@ int main(void)
 				}
 				
 				if ((2.061 >= Rx_Value) && (0.01 <= Rx_Value)){
-					Out_LVL=100-((100/2.061)*Rx_Value);
+					Out_LVL=Out_per*Rx_Value;
 					
-					printf("%d Out Level\n" , Out_LVL);
-					printf("%d Ins Level\n" , Ins_LVL);
 					if(Vinp>0.240){
 						Ins_LVL=100;
 					}
 					
 					if(0.240>=Vinp){
-						Ins_LVL=(100/0.240)*Vinp;
+						Ins_LVL=Ins_per*Vinp;
 					}
 					
-					Ins_Per=Out_LVL+Ins_LVL;
+					Tot_Per=Out_LVL+Ins_LVL;
 					
-					if (Out_LVL>Ins_LVL && Ins_Per>=100 ){
-						Light_LVL=99.99*(Ins_LVL-(Ins_Per-100));
-						TCD0.CCC = Light_LVL;
-						printf("%d Light Level\n" , Light_LVL);
+					if (Out_LVL>Ins_LVL && Tot_Per>100 ){
+						Light_Per=(Ins_LVL-(Tot_Per-100));
 					}
 					
-					if (Out_LVL>Ins_LVL && Ins_Per<=100 ){
-						Light_LVL=99.99*(Ins_LVL+(100+Ins_Per));
-						TCD0.CCC = Light_LVL;
-						printf("%d Light Level\n" , Light_LVL);
+					if (Out_LVL>Ins_LVL && Tot_Per<100 ){
+						Light_Per=(Ins_LVL+(100-Tot_Per));
 					}
 					
-					if (Out_LVL<Ins_LVL && Ins_Per>100 ){
-						Light_LVL=99.99*(Ins_LVL-(Ins_Per-100));
-						TCD0.CCC = Light_LVL;
-						printf("%d Light Level\n" , Light_LVL);
+					if (Out_LVL<Ins_LVL && Tot_Per>100 ){
+						Light_Per=(Ins_LVL-(Tot_Per-100));
 					}
 					
-					if (Out_LVL<Ins_LVL && Ins_Per<100 ){
-						Light_LVL=99.99*(Ins_LVL+(100+Ins_Per));
-						TCD0.CCC = Light_LVL;
-						printf("%d Light Level\n" , Light_LVL);
+					if (Out_LVL<Ins_LVL && Tot_Per<100 ){
+						Light_Per=(Ins_LVL+(100-Tot_Per));
 					}
+					
+					Light_LVL=Light_Per*99.99;
+					TCD0.CCC = Light_LVL;
+					
+					printf("%d Out Level\n" , Out_LVL);
+					printf("%d Ins Level\n" , Ins_LVL);
+					printf("%d Total Percentage\n" , Tot_Per);
+					printf("%d Light Percentage\n" , Light_Per);
+					printf("%d Light Level\n" , Light_LVL);			
 				}
 				
 				if (0.02 >= Rx_Value){
