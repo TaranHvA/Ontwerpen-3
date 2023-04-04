@@ -31,7 +31,8 @@ uint8_t Sen_Prog = 0;		// Sensor program state, if the value is turned into an o
 uint8_t Dim_Time = 15;		// Timer to readjust light level
 
 uint8_t pipe[5] = {0x47, 0x52, 0x44, 0x32, 0x33}; // GRD23 
-
+uint8_t pipe2[5] = {0x47, 0x52, 0x44, 0x32, 0x32}; // GRD22 
+	
 char Print[50];
 int16_t Raw_Value;
 double   Vinp;
@@ -157,7 +158,7 @@ void init_nrf(void)
 	PORTF.INTCTRL   = (PORTF.INTCTRL & ~PORT_INT0LVL_gm) |
 	                  PORT_INT0LVL_LO_gc ;
 	
-	nrfOpenWritingPipe(pipe);
+	nrfOpenWritingPipe(pipe2);                           // Pipe for Sending
 
 	PORTF.OUTSET = PIN0_bm;
 	nrfOpenReadingPipe(0, pipe);                         // Pipe for Receiving
