@@ -1,5 +1,5 @@
 // Bestandsnaam     : Sensorlamp.c
-// Auteur           : 
+// Auteur           : Taran
 // Datum            : 04/03/2023
 // Doel programma   : Light and motion control by sending data by using NRF communication.
 
