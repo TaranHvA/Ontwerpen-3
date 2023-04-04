@@ -30,9 +30,9 @@ uint8_t Sen_Time = 0;		// Sensor time, Counter that oversees the 30 second time 
 uint8_t Sen_Prog = 0;		// Sensor program state, if the value is turned into an one the program work's when the state is changed to a zero the program is turned off
 uint8_t Dim_Time = 15;		// Timer to readjust light level
 
-uint8_t pipe[5] = {0x47, 0x52, 0x44, 0x32, 0x33}; // GRD23 
-uint8_t pipe2[5] = {0x47, 0x52, 0x44, 0x32, 0x32}; // GRD22 
-	
+uint8_t pipe[5] = {0x47, 0x52, 0x44, 0x32, 0x33}; // GRD23
+uint8_t pipe2[5] = {0x47, 0x52, 0x44, 0x32, 0x32}; // GRD22
+
 char Print[50];
 int16_t Raw_Value;
 double   Vinp;
@@ -68,6 +68,7 @@ ISR(TCE0_OVF_vect)
 		printf("Turn on Light\n");
 		sprintf(Print, "%d", 1);
 		nrfWrite( (uint8_t *) Print, strlen(Print) );
+		nrfStartListening();								 // Starts To Listen To The NRF Read And Write Channels
 	}
 	
 	if ( (Sen_Int != 0) && (Sen_Int != 12) ){
@@ -90,8 +91,10 @@ ISR(TCE0_OVF_vect)
 			Sen_Time = 0;
 			Sen_Int = 0;
 			printf("Light's turned off\n");
+			nrfStopListening();									 // stops with Listenong To The NRF Read And Write Channels
 			sprintf(Print, "%d", 0);
 			nrfWrite( (uint8_t *) Print, strlen(Print) );
+			nrfStartListening();								 // Starts To Listen To The NRF Read And Write Channels
 		}
 	}
 	if(Sen_Prog == 1) {
@@ -156,13 +159,11 @@ void init_nrf(void)
 	PORTF.INT0MASK |= PIN6_bm;
 	PORTF.PIN6CTRL  = PORT_ISC_FALLING_gc;
 	PORTF.INTCTRL   = (PORTF.INTCTRL & ~PORT_INT0LVL_gm) |
-	                  PORT_INT0LVL_LO_gc ;
+	PORT_INT0LVL_LO_gc ;
 	
-	nrfOpenWritingPipe(pipe2);                           // Pipe for Sending
-
-	PORTF.OUTSET = PIN0_bm;
+	
 	nrfOpenReadingPipe(0, pipe);                         // Pipe for Receiving
-	nrfStartListening();								 // Starts To Listen To The NRF Read And Write Channels
+	nrfOpenWritingPipe(pipe2);                           // Pipe for Sending
 }
 
 int main(void)
@@ -227,24 +228,28 @@ int main(void)
 					
 					Ins_Per=Out_LVL+Ins_LVL;
 					
-					if (Out_LVL>=Ins_LVL && Ins_Per>=100 ){
+					if (Out_LVL>Ins_LVL && Ins_Per>=100 ){
 						Light_LVL=99.99*(Ins_LVL-(Ins_Per-100));
 						TCD0.CCC = Light_LVL;
+						printf("%d Light Level\n" , Light_LVL);
 					}
 					
-					if (Out_LVL>=Ins_LVL && Ins_Per<=100 ){
+					if (Out_LVL>Ins_LVL && Ins_Per<=100 ){
 						Light_LVL=99.99*(Ins_LVL+(100+Ins_Per));
 						TCD0.CCC = Light_LVL;
+						printf("%d Light Level\n" , Light_LVL);
 					}
 					
-					if (Out_LVL<=Ins_LVL && Ins_Per>=100 ){
+					if (Out_LVL<Ins_LVL && Ins_Per>100 ){
 						Light_LVL=99.99*(Ins_LVL-(Ins_Per-100));
 						TCD0.CCC = Light_LVL;
+						printf("%d Light Level\n" , Light_LVL);
 					}
 					
-					if (Out_LVL<=Ins_LVL && Ins_Per<=100 ){
+					if (Out_LVL<Ins_LVL && Ins_Per<100 ){
 						Light_LVL=99.99*(Ins_LVL+(100+Ins_Per));
 						TCD0.CCC = Light_LVL;
+						printf("%d Light Level\n" , Light_LVL);
 					}
 				}
 				
