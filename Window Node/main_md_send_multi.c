@@ -14,8 +14,6 @@
 #define MAX_VALUE   2047 // FOR ADC XMEGA256A3U
 #define VCC         3.30 // XMEGA256A3U Voltage
 #define VREF        (((double) VCC) / 1.6) // formule voor het omzetten van rauwe waardes naar volt.
-volatile int flag1 = 0; 
-volatile int flag2 = 0; 
 
 char  Rx_packet[NRF_MAX_PAYLOAD_SIZE+1];
 char  command[NRF_MAX_PAYLOAD_SIZE+1];
@@ -25,18 +23,6 @@ uint8_t  pipe[5] = {0x47, 0x52, 0x44, 0x32, 0x33}; // GRD23
 char afgedrukt[50];
 int16_t rauwe_waarde;
 double   vinp;
-
-ISR(PORTD_INT0_vect)
-{
-	flag2 = 1;
-
-}
-
-ISR(PORTA_INT0_vect)
-{
-	flag1 = 1;
-
-}
 
 ISR(TCE0_OVF_vect)
 {
@@ -119,7 +105,6 @@ int main(void)
 	init_adc();
 	Init_Timer();
 	init_stream(F_CPU);
-	PMIC.CTRL |= PMIC_LOLVLEN_bm;
 	sei();
 
 	clear_screen();
@@ -132,10 +117,10 @@ int main(void)
 		if (vinp >=2 && ! (PORTD.IN & PIN5_bm)) {
 			PORTD.OUTSET = PIN4_bm;
 			
-			}else if (vinp <=0.5 && ! (PORTD.IN & PIN7_bm)) {
+		}else if (vinp <=0.5 && ! (PORTD.IN & PIN7_bm)) {
 			PORTD.OUTSET = PIN6_bm;
 			
-			}else{
+		}else{
 			PORTD.OUTCLR = PIN4_bm;
 			PORTD.OUTCLR = PIN6_bm;
 		}
