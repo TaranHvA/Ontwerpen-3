@@ -82,7 +82,7 @@ ISR(TCE0_OVF_vect)
 		++Sen_Int;
 	}
 	
-	if (Sen_Int >= 12){
+	if (Sen_Int >= 24){
 		++Sen_Time;
 		printf("Scanning current situation\n");
 		
@@ -92,7 +92,7 @@ ISR(TCE0_OVF_vect)
 			printf("Light Stays on\n");
 		}
 		
-		if ( (Sen_Time >= 6) && ( ! (PORTD.IN & PIN3_bm)) ){
+		if ( (Sen_Time >= 12) && ( ! (PORTD.IN & PIN3_bm)) ){
 			Sen_Prog = 0;
 			Sen_Time = 0;
 			Sen_Int = 0;
@@ -192,8 +192,6 @@ int main(void)
 
 	PMIC.CTRL     |= PMIC_LOLVLEN_bm;      // set low level interrupts
 	sei();                                 // enable interrupts
-	
-	clear_screen();
 	
 	while(1){
 		
