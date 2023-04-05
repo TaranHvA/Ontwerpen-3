@@ -108,21 +108,10 @@ void Init_Timer(void)
 
 int main(void)
 {	
-	PORTD.DIRSET = PIN0_bm;
-	PORTD.DIRSET = PIN1_bm;
-	
-	PORTA.PIN1CTRL = PORT_OPC_PULLUP_gc | PORT_ISC_FALLING_gc; //switch
-	
-	PORTA.INT0MASK = PIN1_bm;
-	PORTA.PIN1CTRL = PORT_ISC_FALLING_gc;
-	PORTA.INTCTRL  = PORT_INT0LVL_LO_gc;
-	
-	PORTD.PIN5CTRL = PORT_OPC_PULLUP_gc | PORT_ISC_FALLING_gc; //switch
-	
-	PORTD.INT0MASK = PIN5_bm;
-	PORTD.PIN5CTRL = PORT_ISC_FALLING_gc;
-	PORTD.INTCTRL  = PORT_INT0LVL_LO_gc;
-	
+	PORTD.DIRSET = PIN4_bm; // LED up
+	PORTD.DIRSET = PIN5_bm; // top switch
+	PORTD.DIRSET = PIN6_bm; // LED down
+	PORTD.DIRSET = PIN7_bm; // bottom switch
 	
 	Config32MHzClock_Ext16M();
 
@@ -140,26 +129,15 @@ int main(void)
 
 	while (1) {
 		
-		if (! (PORTD.IN & PIN2_bm)) { //add lightsensor value instead
-			PORTD.OUTCLR = PIN0_bm;
-			PORTD.OUTSET = PIN1_bm;
-		}
-		
-		if (! (PORTD.IN & PIN3_bm)) {
-			PORTD.OUTCLR = PIN1_bm;
-			PORTD.OUTSET = PIN0_bm;
-		}
-		
-		if (flag1 == 1) {  //stop switch 1
-			PORTD.OUTCLR = PIN0_bm;
-			PORTD.OUTCLR = PIN1_bm;
-			flag1 = 0;
-		}
-		
-		if (flag2 == 1) {  //stop switch 2
-			PORTD.OUTCLR = PIN0_bm;
-			PORTD.OUTCLR = PIN1_bm;
-			flag2 = 0;
+		if (vinp >=2 && ! (PORTD.IN & PIN5_bm)) {
+			PORTD.OUTSET = PIN4_bm;
+			
+			}else if (vinp <=0.5 && ! (PORTD.IN & PIN7_bm)) {
+			PORTD.OUTSET = PIN6_bm;
+			
+			}else{
+			PORTD.OUTCLR = PIN4_bm;
+			PORTD.OUTCLR = PIN6_bm;
 		}
 	}
 }
