@@ -35,7 +35,7 @@ char  command[NRF_MAX_PAYLOAD_SIZE+1];
 uint8_t Sen_Int  = 0;		// Sensor interrupt, Counter to Interrupts program every 20 minutes to see if people are still in the room
 uint8_t Sen_Time = 0;		// Sensor time, Counter that oversees the 30 second time period of motion before it's turning the program off
 uint8_t Sen_Prog = 0;		// Sensor program state, if the value is turned into an one the program work's when the state is changed to a zero the program is turned off
-uint8_t Dim_Time = 15;		// Timer to readjust light level
+uint8_t Dim_Time = 8;		// Timer to readjust light level
 
 uint8_t pipe[5] = {0x47, 0x52, 0x44, 0x32, 0x33}; // GRD23
 uint8_t pipe2[5] = {0x47, 0x52, 0x44, 0x32, 0x32}; // GRD22
@@ -124,19 +124,15 @@ ISR(PORTF_INT0_vect)
 	flag = 1;
 }
 
-void init_timer(void)
+void init_PWM(void)
 {
-	TCE1.PER      = 31249;     // Tper =  8 * (31249 +1) / 2M = 0.125 s
-	TCE1.CTRLA    = TC_CLKSEL_DIV8_gc;          // Prescaling 8
-	TCE1.CTRLB    = TC_WGMODE_NORMAL_gc;        // Normal mode
-	TCE1.INTCTRLA = TC_OVFINTLVL_OFF_gc;        // Interrupt overflow off
+	TCD0.CTRLB     = TC0_CCCEN_bm | TC0_CCBEN_bm | TC_WGMODE_SINGLESLOPE_gc;
+	TCD0.CTRLA     = TC_CLKSEL_DIV4_gc;
+	TCD0.PER       = 9999;
 }
 
 void Init_Counter_Timer(void)
 {
-	TCD0.CTRLB     = TC0_CCCEN_bm | TC_WGMODE_SINGLESLOPE_gc;
-	TCD0.CTRLA     = TC_CLKSEL_DIV4_gc;
-	TCD0.PER       = 9999;
 	TCE0.CTRLB     = TC_WGMODE_NORMAL_gc;  // Normal mode
 	TCE0.CTRLA     = TC_CLKSEL_DIV64_gc;   // prescaling 64
 	TCE0.INTCTRLA  = TC_OVFINTLVL_LO_gc;   // enable overflow interrupt low level
@@ -181,17 +177,19 @@ int main(void)
 	uint8_t Tot_Per;
 	uint8_t Light_Per;
 	
-	PORTD.DIRSET   = PIN2_bm;			   // input pin ADC
+	PORTD.DIRSET   = PIN2_bm | PIN1_bm;	   // Output pin PWM LEDS
 	PORTD.DIRCLR   = PIN3_bm;              // input pin PIR Motion Sensor
 	
-	init_adc();								// initialize adc function
-	init_timer();                           // initialize timer function
+	init_adc();								// initialize ADC function
+	init_PWM();                             // initialize PWM function
 	Init_Counter_Timer();                   // initialize timer of the sensor counter function
-	init_nrf();								// initialize nrf function
+	init_nrf();								// initialize NRF function
 	init_stream(F_CPU);
 
 	PMIC.CTRL     |= PMIC_LOLVLEN_bm;      // set low level interrupts
 	sei();                                 // enable interrupts
+	
+	clear_screen();
 	
 	while(1){
 		
@@ -213,12 +211,13 @@ int main(void)
 				flag = 0;
 			}
 			
-			if(Dim_Time >= 15){				// Changes Light Value every 15 sec
+			if(Dim_Time >= 10){				// Changes Light Value every 15 sec
 				if (2.061 <= Rx_Value){
 					TCD0.CCC = 0;
+					TCD0.CCB = 0;
 				}
 				
-				if ((2.061 >= Rx_Value) && (0.01 <= Rx_Value)){
+				if ((2.061 >= Rx_Value) && (0.02 < Rx_Value)){
 					Out_LVL=Out_per*Rx_Value;
 					
 					if(Vinp>0.240){
@@ -249,6 +248,7 @@ int main(void)
 					
 					Light_LVL=Light_Per*99.99;
 					TCD0.CCC = Light_LVL;
+					TCD0.CCB = Light_LVL;
 					
 					printf("%d Out Level\n" , Out_LVL);
 					printf("%d Ins Level\n" , Ins_LVL);
@@ -259,12 +259,14 @@ int main(void)
 				
 				if (0.02 >= Rx_Value){
 					TCD0.CCC = 9999;
+					TCD0.CCB = 9999;
 				}
 				Dim_Time = 0;
 			}
 		}
 		if (Sen_Prog == 0){
 			TCD0.CCC = 0;
+			TCD0.CCB = 0;
 		}
 	}
 }
