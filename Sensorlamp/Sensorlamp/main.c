@@ -198,7 +198,7 @@ int main(void)
 				flag = 0;
 			}
 			
-			if(Dim_Time >= 10){				// Changes Light Value every 15 sec
+			if(Dim_Time >= 10){				// Changes Light Value 1 = 1second
 				if (2.061 <= Rx_Value){
 					TCD0.CCA = 0;			// when TDC=0 Lights are off
 					TCD0.CCB = 0;
