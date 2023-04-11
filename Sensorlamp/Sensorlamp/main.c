@@ -17,14 +17,8 @@
 #define VREF        (((double) VCC) / 1.6)	// This Is The Calculation To Make The ADC Value A Voltage.
 #define Out_per   	(100/2.061)				// 100% / Max voltage value remote light sensor
 #define Ins_per     (100/0.240)				// 100% / Max voltage value light sensor by full use LED light
-#define VREF        (((double) VCC) / 1.6)	// This Is The Calculation To Make The ADC Value A Voltage.
-
-
-
-
 
 char  Rx_packet[NRF_MAX_PAYLOAD_SIZE+1];
-
 
 char R;
 volatile int flag = 0;
@@ -67,12 +61,11 @@ int16_t read_adc(void)
 	return ADCA.CH0.RES;
 }
 
-ISR(TCE0_OVF_vect)
+ISR(TCE0_OVF_vect) // Interrupt for counters.
 {
-	if ( (PORTD.IN & PIN3_bm) && (Sen_Int == 0)){
+	if ( (PORTD.IN & PIN4_bm) && (Sen_Int == 0)){
 		Sen_Prog = 1;
 		Sen_Int = 1;
-		printf("Turn on Light\n");
 		sprintf(Print, "%d", 1);
 		nrfWrite( (uint8_t *) Print, strlen(Print) );
 		nrfStartListening();								 // Starts To Listen To The NRF Read And Write Channels
@@ -84,32 +77,26 @@ ISR(TCE0_OVF_vect)
 	
 	if (Sen_Int >= 24){
 		++Sen_Time;
-		printf("Scanning current situation\n");
 		
-		if (PORTD.IN & PIN3_bm){
+		if (PORTD.IN & PIN4_bm){
 			Sen_Time = 0;
 			Sen_Int = 1;
-			printf("Light Stays on\n");
 		}
 		
-		if ( (Sen_Time >= 12) && ( ! (PORTD.IN & PIN3_bm)) ){
+		if ( (Sen_Time >= 12) && ( ! (PORTD.IN & PIN4_bm)) ){
 			Sen_Prog = 0;
 			Sen_Time = 0;
 			Sen_Int = 0;
-			printf("Light's turned off\n");
 			nrfStopListening();									 // stops with Listenong To The NRF Read And Write Channels
 			sprintf(Print, "%d", 0);
 			nrfWrite( (uint8_t *) Print, strlen(Print) );
 			nrfStartListening();								 // Starts To Listen To The NRF Read And Write Channels
 		}
 	}
-	if(Sen_Prog == 1) {
-		printf("Voltage: %5.3lf V \n", Vinp);
-	}
 	++Dim_Time;
 }
 
-ISR(PORTF_INT0_vect)
+ISR(PORTF_INT0_vect) // Interrupt for NRF
 {
 	uint8_t  packet_length;
 	uint8_t tx_ds, max_rt, rx_dr;
@@ -126,7 +113,7 @@ ISR(PORTF_INT0_vect)
 
 void init_PWM(void)
 {
-	TCD0.CTRLB     = TC0_CCCEN_bm | TC0_CCBEN_bm | TC_WGMODE_SINGLESLOPE_gc;
+	TCD0.CTRLB     = TC0_CCAEN_bm | TC0_CCBEN_bm | TC0_CCCEN_bm | TC0_CCDEN_bm | TC_WGMODE_SINGLESLOPE_gc;
 	TCD0.CTRLA     = TC_CLKSEL_DIV4_gc;
 	TCD0.PER       = 9999;
 }
@@ -177,8 +164,8 @@ int main(void)
 	uint8_t Tot_Per;
 	uint8_t Light_Per;
 	
-	PORTD.DIRSET   = PIN2_bm | PIN1_bm;	   // Output pin PWM LEDS
-	PORTD.DIRCLR   = PIN3_bm;              // input pin PIR Motion Sensor
+	PORTD.DIRSET   = PIN3_bm | PIN2_bm | PIN1_bm | PIN0_bm;	   // Output pin PWM LEDS
+	PORTD.DIRCLR   = PIN4_bm;              // input pin PIR Motion Sensor
 	
 	init_adc();								// initialize ADC function
 	init_PWM();                             // initialize PWM function
@@ -213,8 +200,10 @@ int main(void)
 			
 			if(Dim_Time >= 10){				// Changes Light Value every 15 sec
 				if (2.061 <= Rx_Value){
-					TCD0.CCC = 0;
+					TCD0.CCA = 0;			// when TDC=0 Lights are off
 					TCD0.CCB = 0;
+					TCD0.CCC = 0;
+					TCD0.CCD = 0;
 				}
 				
 				if ((2.061 >= Rx_Value) && (0.02 < Rx_Value)){
@@ -246,9 +235,11 @@ int main(void)
 						Light_Per=(Ins_LVL+(100-Tot_Per));
 					}
 					
-					Light_LVL=Light_Per*99.99;
-					TCD0.CCC = Light_LVL;
+					Light_LVL=Light_Per*99.99;			// Light Level is 0-100%. TCD is 0 to 9999 so 100*99.99=9999.
+					TCD0.CCA = Light_LVL;
 					TCD0.CCB = Light_LVL;
+					TCD0.CCC = Light_LVL;
+					TCD0.CCd = Light_LVL;
 					
 					printf("%d Out Level\n" , Out_LVL);
 					printf("%d Ins Level\n" , Ins_LVL);
@@ -258,15 +249,19 @@ int main(void)
 				}
 				
 				if (0.02 >= Rx_Value){
-					TCD0.CCC = 9999;
+					TCD0.CCA = 9999;
 					TCD0.CCB = 9999;
+					TCD0.CCC = 9999;
+					TCD0.CCD = 9999;
 				}
 				Dim_Time = 0;
 			}
 		}
 		if (Sen_Prog == 0){
-			TCD0.CCC = 0;
+			TCD0.CCA = 0;
 			TCD0.CCB = 0;
+			TCD0.CCC = 0;
+			TCD0.CCD = 0;
 		}
 	}
 }
