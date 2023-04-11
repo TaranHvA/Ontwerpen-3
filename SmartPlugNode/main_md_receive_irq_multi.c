@@ -14,7 +14,7 @@ char  Rx2_packet[NRF_MAX_PAYLOAD_SIZE+1];
 char R;
 volatile int flag = 0;
 
-uint8_t pipe2[5] = {0x47, 0x52, 0x44, 0x32, 0x32}; // GRD22 
+uint8_t pipe2[5] = {0x47, 0x52, 0x44, 0x32, 0x32}; // GRD22
 
 uint8_t a;
 
@@ -134,21 +134,24 @@ int main(void)
 	
 	while (1) {
 		while (a == 1) {
-				if (i == NUM_SAMPLES)
-				{
-					double rmsWaarde = (double) BerekenRMS(sample, NUM_SAMPLES);
-					stroom = rmsWaarde*0.0085;
-					printf("rms =%f stroom =%f A\n", rmsWaarde, stroom);
-					i = 0;
-				}
-				if (stroom <= 0.01)
-				{
-					PORTD.OUTSET = PIN1_bm;
-				}
-				if (stroom >= 0.01)
-				{
-					PORTD.OUTCLR = PIN1_bm;
-				}
+			if (i == NUM_SAMPLES)
+			{
+				double rmsWaarde = (double) BerekenRMS(sample, NUM_SAMPLES);
+				stroom = rmsWaarde*0.0085;
+				printf("rms =%f stroom =%f A\n", rmsWaarde, stroom);
+				i = 0;
+			}
+			if (stroom <= 0.04)
+			{
+				PORTD.OUTSET = PIN1_bm;
+			}
+			if (stroom >= 0.04)
+			{
+				PORTD.OUTCLR = PIN1_bm;
+			}
+		}
+		if (a == 0) {
+			PORTD.OUTSET = PIN1_bm;
 		}
 	}
 }
