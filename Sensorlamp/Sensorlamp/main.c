@@ -90,7 +90,6 @@ ISR(TCE0_OVF_vect) // Interrupt for counters.
 			nrfStopListening();									 // stops with Listenong To The NRF Read And Write Channels
 			sprintf(Print, "%d", 0);
 			nrfWrite( (uint8_t *) Print, strlen(Print) );
-			nrfStartListening();								 // Starts To Listen To The NRF Read And Write Channels
 		}
 	}
 	++Dim_Time;
