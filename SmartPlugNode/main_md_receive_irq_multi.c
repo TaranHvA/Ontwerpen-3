@@ -16,7 +16,7 @@ volatile int flag = 0;
 
 uint8_t pipe2[5] = {0x47, 0x52, 0x44, 0x32, 0x32}; // GRD22
 
-uint8_t a;
+volatile uint8_t a;
 
 double BerekenRMS(volatile int16_t *samples, uint8_t numSamples) {
 	
@@ -51,7 +51,6 @@ ISR(PORTF_INT0_vect)
 	}
 	
 	a = atoi(Rx2_packet);
-	printf("%d\n" , a);
 }
 
 ISR(ADCA_CH0_vect)
