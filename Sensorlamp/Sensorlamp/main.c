@@ -26,10 +26,10 @@ volatile int flag = 0;
 char  Rx2_packet[NRF_MAX_PAYLOAD_SIZE+1];
 char  command[NRF_MAX_PAYLOAD_SIZE+1];
 
-uint8_t Sen_Int  = 0;		// Sensor interrupt, Counter to Interrupts program every 20 minutes to see if people are still in the room
-uint8_t Sen_Time = 0;		// Sensor time, Counter that oversees the 30 second time period of motion before it's turning the program off
-uint8_t Sen_Prog = 0;		// Sensor program state, if the value is turned into an one the program work's when the state is changed to a zero the program is turned off
-uint8_t Dim_Time = 0;		// Timer to readjust light level
+uint8_t Sen_Int  = 0;			// Sensor interrupt, Counter to Interrupts program every 20 minutes to see if people are still in the room
+uint8_t Sen_Time = 0;			// Sensor time, Counter that oversees the 30 second time period of motion before it's turning the program off
+volatile uint8_t Sen_Prog = 0;		// Sensor program state, if the value is turned into an one the program work's when the state is changed to a zero the program is turned off
+volatile uint8_t Dim_Time = 0;		// Timer to readjust light level
 
 uint8_t pipe[5] = {0x47, 0x52, 0x44, 0x32, 0x33}; // GRD23
 uint8_t pipe2[5] = {0x47, 0x52, 0x44, 0x32, 0x32}; // GRD22
@@ -69,7 +69,7 @@ ISR(TCE0_OVF_vect) // Interrupt for counters.
 		Dim_Time = 8;
 		sprintf(Print, "%d", 1);
 		nrfWrite( (uint8_t *) Print, strlen(Print) );
-		nrfStartListening();								 // Starts To Listen To The NRF Read And Write Channels
+		nrfStartListening();								// Starts To Listen To The NRF Read And Write Channels
 	}
 	
 	if ( (Sen_Int != 0) && (Sen_Int != 24) ){
@@ -88,7 +88,7 @@ ISR(TCE0_OVF_vect) // Interrupt for counters.
 			Sen_Prog = 0;
 			Sen_Time = 0;
 			Sen_Int = 0;
-			nrfStopListening();									 // stops with Listenong To The NRF Read And Write Channels
+			nrfStopListening();							// stops with Listening To The NRF Read And Write Channels
 			sprintf(Print, "%d", 0);
 			nrfWrite( (uint8_t *) Print, strlen(Print) );
 		}
