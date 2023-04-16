@@ -207,14 +207,14 @@ int main(void)
 				}
 				
 				if ((2.061 >= Rx_Value) && (0.02 < Rx_Value)){
-					Out_LVL=Out_per*Rx_Value;
+					Out_LVL=OUT_PER*Rx_Value;
 					
 					if(Vinp>0.240){
 						Ins_LVL=100;
 					}
 					
 					if(0.240>=Vinp){
-						Ins_LVL=Ins_per*Vinp;
+						Ins_LVL=INS_PER*Vinp;
 					}
 					
 					Tot_Per=Out_LVL+Ins_LVL;
