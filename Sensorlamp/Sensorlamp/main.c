@@ -15,8 +15,8 @@
 #define MAX_VALUE   2047					// MAX ADC Value ATXMEGA256A3U
 #define VCC         3.30					// XMEGA256A3U VCC PIN Voltage
 #define VREF        (((double) VCC) / 1.6)	// This Is The Calculation To Make The ADC Value A Voltage.
-#define Out_per   	(100/2.061)				// 100% / Max voltage value remote light sensor
-#define Ins_per     (100/0.240)				// 100% / Max voltage value light sensor by full use LED light
+#define OUT_PER     (100/2.061)				// 100% / Max voltage value remote light sensor
+#define INS_PER     (100/0.240)				// 100% / Max voltage value light sensor by full use LED light
 
 char  Rx_packet[NRF_MAX_PAYLOAD_SIZE+1];
 
