@@ -28,7 +28,7 @@ ISR(TCE0_OVF_vect)
 {
 	rauwe_waarde = lees_adc();
 	vinp = (double) rauwe_waarde * VREF / (MAX_VALUE + 1);
-	//a2 = fabs(vinp);
+	
 	printf("spanning: %5.3lf V \n", vinp);
 	
 	
