@@ -239,7 +239,7 @@ int main(void)
 					TCD0.CCA = Light_LVL;
 					TCD0.CCB = Light_LVL;
 					TCD0.CCC = Light_LVL;
-					TCD0.CCd = Light_LVL;
+					TCD0.CCD = Light_LVL;
 					
 					printf("%d Out Level\n" , Out_LVL);
 					printf("%d Ins Level\n" , Ins_LVL);
